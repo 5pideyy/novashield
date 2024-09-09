@@ -4,16 +4,9 @@ import { exec } from 'child_process';
 import geoip from 'geoip-lite';
 import { Context, Next } from 'koa';
 import util from 'util';
+import { connectToDatabase } from './db';  // Import the database connection
 
 const execPromise = util.promisify(exec);
-
-// MongoDB connection URI
-const mongoURI = 'mongodb+srv://dankmater404:admin123@cluster0.9pq3hla.mongodb.net/Cluster0?retryWrites=true&w=majority&appName=Cluster0';
-
-// Connect to MongoDB
-mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((error: any) => console.error('Error connecting to MongoDB:', error));
 
 // Define schema for system health logs
 const systemHealthSchema = new mongoose.Schema({
@@ -26,8 +19,14 @@ const systemHealthSchema = new mongoose.Schema({
   healthCheckDetails: String,
 });
 
-// Create model from the schema
-const SystemHealth = mongoose.model('SystemHealth', systemHealthSchema);
+// Create model from the schema (model will use the connected database)
+let SystemHealth: mongoose.Model<any> | undefined = undefined;
+
+const initializeModel = () => {
+  if (!SystemHealth) {
+    SystemHealth = mongoose.model('SystemHealth', systemHealthSchema);
+  }
+};
 
 // Function to get system uptime
 const getSystemUptime = () => {
@@ -79,6 +78,12 @@ const performHealthCheck = async () => {
 
 // Function to log system health data
 export const logSystemHealth = async () => {
+  // Ensure that the model is initialized
+  if (!SystemHealth) {
+    console.error('SystemHealth model is not initialized.');
+    return;
+  }
+
   const uptime = getSystemUptime();
   const downtime = getSystemDowntime();
   const networkTraffic = await getNetworkTraffic();
@@ -102,6 +107,17 @@ export const logSystemHealth = async () => {
 };
 
 // Function to start periodic logging
-export const startLoggingSystemHealth = () => {
-  setInterval(logSystemHealth, 5 * 60 * 1000);  // Log every 5 minutes
+export const startLoggingSystemHealth = async () => {
+  try {
+    // Ensure MongoDB is connected
+    await connectToDatabase();
+    
+    // Initialize the system health model after connecting to the DB
+    initializeModel();
+
+    // Log system health data every 5 minutes
+    setInterval(logSystemHealth, 5 * 60 * 1000);  // Log every 5 minutes
+  } catch (error) {
+    console.error('Error starting system health logging:', error);
+  }
 };

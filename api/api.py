@@ -10,14 +10,14 @@ from datetime import datetime
 from typing import List, Dict
 
 # MongoDB connection URI
-MONGO_URI = "mongodb+srv://dankmater404:admin123@cluster0.9pq3hla.mongodb.net/Cluster0?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = "mongodb+srv://admin:admin@cluster0.1wgqgg8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 # MongoDB client
 client = AsyncIOMotorClient(MONGO_URI)
-db = client.Cluster0
-system_health_collection = db.system_health  # Collection for system health logs
-logs_collection = db.logs  # Collection for logs
-blocked_requests_collection = db.blocked_requests  # Collection for blocked requests
+db = client.test
+system_health_collection = db.systemhealths # Collection for system health logs
+logs_collection = db.requestlogs  #Collection for logs
+blocked_requests_collection = db.blockedrequests # Collection for blocked requests
 
 # FastAPI instance
 app = FastAPI()

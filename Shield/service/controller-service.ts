@@ -4,15 +4,15 @@ import config from './util/config-parser';
 import Ratelimiter from './controllers/rate-limiter';
 import Waf from './controllers/waf';
 import NoSql from './util/nosql';
+import { connectToDatabase } from './controllers/db';  // Correct relative import path
 import mongoose from 'mongoose';
 
-// MongoDB connection URI
-const mongoURI = 'mongodb+srv://dankmater404:admin123@cluster0.9pq3hla.mongodb.net/Cluster0?retryWrites=true&w=majority&appName=Cluster0';
-
-// Connect to MongoDB
-mongoose.connect(mongoURI)
-  .then(() => console.log('MongoDB connected successfully'))
-  .catch((error) => console.error('Error connecting to MongoDB:', error));
+// Ensure MongoDB is connected
+connectToDatabase().then(() => {
+  console.log('MongoDB connection established in controller-service.ts');
+}).catch((error) => {
+  console.error('Error connecting to MongoDB in controller-service.ts:', error);
+});
 
 // Define schema for blocked requests and banned IPs
 const blockedRequestSchema = new mongoose.Schema({
